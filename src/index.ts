@@ -1,5 +1,6 @@
 import express from "express";
 import { AppDataSource } from "./data-source";
+import routes from "./routes";
 
 AppDataSource.initialize().then(() => {
     const app  = express();
@@ -10,6 +11,8 @@ AppDataSource.initialize().then(() => {
     })
 
     app.listen(process.env.PORT, () => {
-        console.log("Server is running");
+        console.log("Server is running port: ", process.env.PORT);
     })
+
+    app.use(routes)
 })

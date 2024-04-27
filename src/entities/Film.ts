@@ -20,8 +20,9 @@ export class Film {
   @JoinColumn({name: "user_id"})
   user: User;
 
-  constructor(title: string, description: string) {
+  constructor(title: string, description: string, user: User) {
     this.title = title;
     this.description = description;
+    this.user = user;
   }
 }
