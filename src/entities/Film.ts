@@ -1,28 +1,22 @@
-import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn } from 'typeorm';
-import { IsNotEmpty, MaxLength } from 'class-validator';
-import { User } from './User';
+import { Entity, Column, PrimaryGeneratedColumn, OneToMany } from 'typeorm';
+import { FavoriteFilm } from "./FavoriteFilms";
 
 @Entity("films")
 export class Film {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({type: "text", nullable: false})
-  @IsNotEmpty({ message: 'O título é obrigatório' })
-  @MaxLength(100, { message: 'O título deve ter no máximo 100 caracteres' })
+  @Column({name: "title", type: "varchar", length: 255, nullable: false, unique: true})
   title: string;
 
-  @Column({type: "text", nullable: false})
-  @IsNotEmpty({ message: 'A descrição é obrigatória' })
+  @Column({name: "description", type: "varchar",  length: 255, nullable: true})
   description: string;
 
-  @ManyToOne(() => User, user => user.films)
-  @JoinColumn({name: "user_id"})
-  user: User;
+  @OneToMany(() => FavoriteFilm, favoriteFilm => favoriteFilm.film)
+  favorites: FavoriteFilm[];
 
-  constructor(title: string, description: string, user: User) {
+  constructor(title: string, description: string) {
     this.title = title;
     this.description = description;
-    this.user = user;
   }
 }

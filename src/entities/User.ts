@@ -1,36 +1,31 @@
-import { Entity, Column, PrimaryGeneratedColumn, OneToMany } from 'typeorm';
-import { IsNotEmpty, IsEmail, MinLength, MaxLength } from 'class-validator';
-import { Film } from './Film';
+import { Entity, Column, PrimaryGeneratedColumn, OneToMany } from "typeorm";
+import { FavoriteFilm } from "./FavoriteFilms";
 
 @Entity("users")
 export class User {
-
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column()
-  @IsNotEmpty({ message: 'O nome é obrigatório' })
-  @MinLength(3, { message: 'O nome deve ter no mínimo 3 caracteres' })
-  @MaxLength(50, { message: 'O nome deve ter no máximo 50 caracteres' })
+  @Column({
+    name: "name",
+    type: "varchar",
+    length: 50,
+    nullable: false,
+  })
   name: string;
 
-  @Column({type: "text", nullable: false})
-  @IsEmail({}, { message: 'Email inválido' })
+  @Column({ name: "email", type: "varchar", length: 100, nullable: false, unique: true })
   email: string;
 
-  @Column({type: "text", nullable: false})
-  @IsNotEmpty({ message: 'A senha é obrigatória' })
-  @MinLength(6, { message: 'A senha deve ter no mínimo 6 caracteres' })
+  @Column({ name: "password", type: "varchar", nullable: false })
   password: string;
 
-  @OneToMany(() => Film, film => film.user)
-  films: Film[];
+  @OneToMany(() => FavoriteFilm, (favoriteFilm) => favoriteFilm.user)
+  favoriteFilms: FavoriteFilm[];
 
   constructor(name: string, email: string, password: string) {
     this.name = name;
-    this.email = email   
+    this.email = email;
     this.password = password;
   }
-
-
 }
