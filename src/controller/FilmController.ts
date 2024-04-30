@@ -1,139 +1,67 @@
 import { Controller } from "@nestjs/common";
 import { Request, Response } from "express";
-import { filmRepository } from "../repositories/FilmRepository";
-import { User } from "../entities/User";
-import { Film } from "../entities/Film";
-import { FilmUpdateDto } from "../dto/FilmUpdateDto";
-import { Not, Equal } from "typeorm";
+import { FIlmRequestDto } from "../dto/FilmRequestDto";
+import { filmService } from "../services/FilmService";
+import { BadRequestError } from "../helpers/api-errors";
 
 @Controller("films")
 class FilmController {
   async create(req: Request, res: Response) {
-    const { title, description, user_id } = req.body;
+    const body: FIlmRequestDto = this.getPayloadRequestBodyFilmDto(req);
 
-    if (!title || !description) {
-      return res.status(400).json({ message: "Invalid title or description" });
-    }
+    const filmSaved = await filmService.create(body);
 
-    const existsFilm = await filmRepository.findOneBy({ title });
-
-    if (existsFilm) {
-      return res.status(400).json({ message: "filme já cadastrado" });
-    }
-
-    try {
-      const film = filmRepository.create({
-        title,
-        description,
-      });
-
-      const filmSaved = await filmRepository.save(film);
-
-      return res.status(200).json(filmSaved);
-    } catch (error) {
-      return res.status(500).json({ message: "Internal server error" });
-    }
+    return res.status(200).json(filmSaved);
   }
 
   async list(req: Request, res: Response) {
-    try {
-      const films: Film[] = await filmRepository.find({
-        relations: ["favorites"],
-      });
-
-      return res.status(200).json(films);
-    } catch (error) {
-      return res.status(500).json({ message: "Internal server error" });
-    }
+    const films = await filmService.list();
+    return res.status(200).json(films);
   }
 
   async getById(req: Request, res: Response) {
-    try {
-      const { id } = req.params;
+    const id: number = this.getIdRequestParam(req);
 
-      if (!id) {
-        return res.status(400).json({ message: "id invalid" });
-      }
+    const film = await filmService.getById(id);
 
-      const filmId = id as unknown as number | undefined;
-
-      const filmExist = await filmRepository.findOneBy({ id: filmId });
-
-      if (!filmExist) {
-        return res.status(400).json({ message: "filme não encontrado" });
-      }
-
-      return res.status(200).json(filmExist);
-    } catch (error) {
-      return res.status(500).json({ message: "internal server error" });
-    }
+    return res.status(200).json(film);
   }
 
   async update(req: Request, res: Response) {
-    try {
-      const { id } = req.params;
-      const { title, description }: FilmUpdateDto = req.body;
+    const id: number = this.getIdRequestParam(req);
+    const body = this.getPayloadRequestBodyFilmDto(req);
 
-      const filmId = id as unknown as number | undefined;
+    const filmExist = await filmService.update(id, body);
 
-      if (!id) {
-        return res.status(400).json({ message: "id invalid" });
-      }
-
-      if (!title) {
-        return res.status(400).json({ message: "propriedade title invalido" });
-      }
-
-      const filmExist = await filmRepository.findOneBy({ id: filmId });
-
-      if (!filmExist) {
-        return res.status(400).json({ message: "filme não encontrado" });
-      }
-
-      const filmExistTitle = await filmRepository.findBy({
-        id: Not(filmExist.id),
-        title: title
-      });
-
-      if (filmExistTitle && filmExistTitle.length > 0) {
-        return res.status(400).json({ message: "titulo já cadastrado" });
-      }
-
-      filmExist.title = title;
-
-      if (description) filmExist.description = description;
-
-      await filmRepository.save(filmExist);
-
-      return res.status(200).json(filmExist);
-    } catch (error) {
-      return res.status(500).json({ message: "Internal server error" });
-    }
+    return res.status(200).json(filmExist);
   }
 
   async delete(req: Request, res: Response) {
-    try {
-      const { id } = req.params;
+    const id: number = this.getIdRequestParam(req);
 
-      if (!id) {
-        return res.status(400).json({ message: "id invalid" });
-      }
+    await filmService.delete(id);
 
-      const filmId = id as unknown as number | undefined;
+    return res.sendStatus(204);
+  }
 
-      const filmExist = await filmRepository.findOneBy({ id: filmId });
+  private getIdRequestParam(req: Request): number {
+    const { id } = req.params;
 
-      if (!filmExist) {
-        return res.status(404).json({ message: "filme não encontrado" });
-      }
-
-      await filmRepository.delete(filmExist);
-
-      return res.sendStatus(204);
-
-    } catch (error) {
-      return res.status(500).json({ message: "internal server error" });
+    if (!id) {
+      throw new BadRequestError("id invalid");
     }
+
+    return DefaultUtils.convertStringToInt(id);
+  }
+
+  private getPayloadRequestBodyFilmDto(req: Request): FIlmRequestDto {
+    const body: FIlmRequestDto = req.body;
+
+    if (!body.title) {
+      throw new BadRequestError("propriedade title invalido");
+    }
+
+    return body;
   }
 }
 

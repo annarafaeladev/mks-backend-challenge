@@ -1,4 +1,4 @@
-export class FilmUpdateDto  {
+export class FIlmRequestDto  {
     title: string
     description: string
 }
