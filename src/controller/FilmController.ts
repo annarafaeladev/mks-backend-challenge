@@ -3,6 +3,7 @@ import { Request, Response } from "express";
 import { FIlmRequestDto } from "../dto/FilmRequestDto";
 import { filmService } from "../services/FilmService";
 import { BadRequestError } from "../helpers/api-errors";
+import { DefaultUtils } from "../utils/DefaultUtils";
 
 @Controller("films")
 class FilmController {
@@ -20,7 +21,7 @@ class FilmController {
   }
 
   async getById(req: Request, res: Response) {
-    const id: number = this.getIdRequestParam(req);
+    const id: number = DefaultUtils.getIdRequestParam(req);
 
     const film = await filmService.getById(id);
 
@@ -28,7 +29,7 @@ class FilmController {
   }
 
   async update(req: Request, res: Response) {
-    const id: number = this.getIdRequestParam(req);
+    const id: number = DefaultUtils.getIdRequestParam(req);
     const body = this.getPayloadRequestBodyFilmDto(req);
 
     const filmExist = await filmService.update(id, body);
@@ -37,21 +38,11 @@ class FilmController {
   }
 
   async delete(req: Request, res: Response) {
-    const id: number = this.getIdRequestParam(req);
+    const id: number = DefaultUtils.getIdRequestParam(req);
 
     await filmService.delete(id);
 
     return res.sendStatus(204);
-  }
-
-  private getIdRequestParam(req: Request): number {
-    const { id } = req.params;
-
-    if (!id) {
-      throw new BadRequestError("id invalid");
-    }
-
-    return DefaultUtils.convertStringToInt(id);
   }
 
   private getPayloadRequestBodyFilmDto(req: Request): FIlmRequestDto {
